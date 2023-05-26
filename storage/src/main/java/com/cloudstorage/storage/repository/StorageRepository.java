@@ -1,14 +1,30 @@
 package com.cloudstorage.storage.repository;
 
-import org.springframework.stereotype.Repository;
+import com.cloudstorage.storage.entity.Account;
+import com.cloudstorage.storage.entity.FileEntity;
+import com.cloudstorage.storage.entity.Login;
+import org.springframework.web.multipart.MultipartFile;
 
-@Repository
-public class StorageRepository {
+import java.io.IOException;
+import java.util.List;
 
-    private String testMessage = "Hallo, world!!";
+public interface StorageRepository {
 
+    public Login login(Account account);
 
-    public String getTest(){
-        return this.testMessage;
-    }
+    public void logout(String token);
+
+    public boolean verify(Account account);
+
+    public boolean auth(String authToken);
+
+    public List<FileEntity> getFileList(int limit);
+
+    public boolean saveFile(MultipartFile file);
+
+    public boolean updateFile(String oldFilename, String newFilename);
+
+    public boolean deleteFile(String filename);
+
+    public byte[] getFile(String filename) throws IOException;
 }
