@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,7 +27,7 @@ public class StorageRepositoryImpl implements StorageRepository {
     private Logger logger = Logger.getLogger(StorageController.class.getName());
 
     public StorageRepositoryImpl() {
-        final Account newAcc = new Account("321", "654");
+        final Account newAcc = new Account("user", "123");
         accountStorage.put(newAcc.getLogin(), newAcc);
     }
 
@@ -62,8 +61,8 @@ public class StorageRepositoryImpl implements StorageRepository {
 
     @Override
     public boolean auth(String authToken) {
-        final String tk = authToken.substring(authToken.indexOf(" ") + 1);
-        return tokenStorage.containsKey(tk);
+        final String token = authToken.substring(authToken.indexOf(" ") + 1);
+        return tokenStorage.containsKey(token);
     }
 
     @Override
@@ -83,6 +82,7 @@ public class StorageRepositoryImpl implements StorageRepository {
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    return null;
                 }
             }
             if (fileLimit <= 0) {

@@ -14,7 +14,10 @@ import java.util.List;
 import java.util.logging.Logger;
 
 
-@CrossOrigin(origins = "http://192.168.0.111, http://192.168.0.111:8080 , *", allowCredentials = "true")
+@CrossOrigin(
+        origins = "http://192.168.0.111, http://192.168.0.111:8080 , *",
+        allowCredentials = "true"
+)
 @RestController
 @RequestMapping("/cloud")
 public class StorageController {
@@ -36,7 +39,8 @@ public class StorageController {
     }
 
     @PostMapping("/file")
-    public ResponseEntity<String> filePost(@RequestHeader("auth-token") String authToken, @RequestBody MultipartFile file) {
+    public ResponseEntity<String> filePost(@RequestHeader("auth-token") String authToken,
+                                           @RequestBody MultipartFile file) {
         final String response = service.saveFile(authToken, file);
         return ResponseEntity.ok(response);
     }

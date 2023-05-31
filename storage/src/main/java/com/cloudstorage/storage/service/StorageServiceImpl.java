@@ -70,7 +70,7 @@ public class StorageServiceImpl implements StorageService {
         }
 
         final List<FileEntity> fileList = repository.getFileList(limit);
-        if (fileList == null || fileList.isEmpty()) {
+        if (fileList == null) {
             // Send code: 500
             throw new ServerError("Service: Server Error in getFileList method");
         }
@@ -97,6 +97,9 @@ public class StorageServiceImpl implements StorageService {
         byte[] fileByte = null;
         try {
             fileByte = repository.getFile(filename);
+            if (fileByte == null) {
+                throw new FileNotFoundException();
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             // Send code: 500
