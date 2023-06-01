@@ -14,11 +14,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -26,7 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class HttpRequestMockTests {
+public class HttpRequestRepoMockTests {
+
+
+    private ObjectMapper objectMapper = new ObjectMapper();
+    private HttpData data = new HttpData();
 
     @Value(value = "${local.server.port}")
     private int port;
@@ -37,13 +39,9 @@ public class HttpRequestMockTests {
     @MockBean
     private StorageRepository repository;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private String host = "http://localhost:";
-    private String token = "12345678-123456-781234-5678-12345678";
-
     @BeforeEach
     void beforeEach() {
-        Mockito.when(this.repository.auth(token)).thenReturn(true);
+        Mockito.when(this.repository.auth(this.data.getToken())).thenReturn(true);
     }
 
     @Test
@@ -51,13 +49,9 @@ public class HttpRequestMockTests {
 
         Mockito.when(this.repository.getFileList(3)).thenReturn(List.of());
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", token);
-        final HttpEntity<Account> entity = new HttpEntity(headers);
-        final URI uri = new URI(host + port + "/cloud/list" + "?limit=3");
+        final HttpEntity<Account> entity = new HttpEntity(this.data.getHeaders());
 
-
-        ResponseEntity res = this.restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriList(this.port), HttpMethod.GET, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -68,12 +62,9 @@ public class HttpRequestMockTests {
         Mockito.when(repository.updateFile("test", "test")).thenReturn(true);
 
         final FileEntity newFilename = new FileEntity("test", 100L);
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", token);
-        final HttpEntity<FileEntity> entity = new HttpEntity(newFilename, headers);
-        final URI uri = new URI(host + port + "/cloud/file" + "?filename=test");
+        final HttpEntity<FileEntity> entity = new HttpEntity(newFilename, this.data.getHeaders());
 
-        ResponseEntity res = this.restTemplate.exchange(uri, HttpMethod.PUT, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriFileWithName(this.port), HttpMethod.PUT, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -84,13 +75,9 @@ public class HttpRequestMockTests {
         final MultipartFile file = new MockMultipartFile("test", new byte[0]);
         Mockito.when(this.repository.saveFile(file)).thenReturn(true);
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", token);
-        final HttpEntity entity = new HttpEntity(headers);
-        final URI uri = new URI(host + port + "/cloud/file");
+        final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 
-
-        ResponseEntity res = this.restTemplate.exchange(uri, HttpMethod.POST, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriFile(this.port), HttpMethod.POST, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(res.getBody()).isEqualTo("OK");
@@ -101,12 +88,9 @@ public class HttpRequestMockTests {
 
         Mockito.when(this.repository.deleteFile("test")).thenReturn(true);
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", token);
-        final HttpEntity entity = new HttpEntity(headers);
-        final URI uri = new URI(host + port + "/cloud/file" + "?filename=test");
+        final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 
-        ResponseEntity res = this.restTemplate.exchange(uri, HttpMethod.DELETE, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriFileWithName(this.port), HttpMethod.DELETE, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
@@ -116,12 +100,9 @@ public class HttpRequestMockTests {
 
         Mockito.when(this.repository.getFile("test")).thenReturn(new byte[0]);
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", token);
-        final HttpEntity entity = new HttpEntity(headers);
-        final URI uri = new URI(host + port + "/cloud/file" + "?filename=test");
+        final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 
-        ResponseEntity res = this.restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriFileWithName(this.port), HttpMethod.GET, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
     }

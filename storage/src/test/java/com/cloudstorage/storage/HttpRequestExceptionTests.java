@@ -12,7 +12,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.io.File;
-import java.net.URI;
 import java.net.URISyntaxException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,8 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class HttpRequestExceptionTests {
 
-    private String host = "http://localhost:";
-    private String token = "12345678-123456-781234-5678-12345678";
+    private HttpData data = new HttpData();
 
     @Value(value = "${local.server.port}")
     private int port;
@@ -30,116 +28,88 @@ public class HttpRequestExceptionTests {
     @Autowired
     private TestRestTemplate restTemplate;
 
+
     @Test
-    void badRequestLoginTest() {
+    void badRequestLoginTest() throws URISyntaxException {
 
         final HttpEntity<Account> badEntity = new HttpEntity(new Account("", ""));
-        final String URI = this.host + this.port + "/cloud/login";
 
-        ResponseEntity badResult = this.restTemplate.exchange(URI, HttpMethod.POST, badEntity, String.class);
+        ResponseEntity badResult = this.restTemplate.exchange(this.data.uriLogin(this.port), HttpMethod.POST, badEntity, String.class);
 
         assertThat(badResult.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void badRequestLogoutTest() {
+    void badRequestLogoutTest() throws URISyntaxException {
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", "");
-        final HttpEntity entity = new HttpEntity(headers);
+        final HttpEntity entity = new HttpEntity(this.data.getEmptyHeaders());
 
-        final String URI = this.host + this.port + "/cloud/logout";
-
-        ResponseEntity res = this.restTemplate.exchange(URI, HttpMethod.POST, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriLogout(this.port), HttpMethod.POST, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void badRequestFileGetMethodTest() {
+    void badRequestFileGetMethodTest() throws URISyntaxException {
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", "");
-        final HttpEntity entity = new HttpEntity(headers);
+        final HttpEntity entity = new HttpEntity(this.data.getEmptyHeaders());
 
-        final String URI = this.host + this.port + "/cloud/file" + "?filename=test";
-
-        ResponseEntity res = this.restTemplate.exchange(URI, HttpMethod.GET, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriFileWithName(this.port), HttpMethod.GET, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void unauthorizedFileGetMethodTest() {
+    void unauthorizedFileGetMethodTest() throws URISyntaxException {
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", token);
-        final HttpEntity entity = new HttpEntity(headers);
+        final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 
-        final String URI = this.host + this.port + "/cloud/file" + "?filename=test";
-
-        ResponseEntity res = this.restTemplate.exchange(URI, HttpMethod.GET, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriFileWithName(this.port), HttpMethod.GET, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
 
     @Test
-    void badRequestFileDeleteMethodTest() {
+    void badRequestFileDeleteMethodTest() throws URISyntaxException {
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", "");
-        final HttpEntity entity = new HttpEntity(headers);
+        final HttpEntity entity = new HttpEntity(this.data.getEmptyHeaders());
 
-        final String URI = this.host + this.port + "/cloud/file" + "?filename=test";
-
-        ResponseEntity res = this.restTemplate.exchange(URI, HttpMethod.DELETE, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriFileWithName(this.port), HttpMethod.DELETE, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void unauthorizedFileDeleteMethodTest() {
+    void unauthorizedFileDeleteMethodTest() throws URISyntaxException {
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", token);
-        final HttpEntity entity = new HttpEntity(headers);
+        final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 
-        final String URI = this.host + this.port + "/cloud/file" + "?filename=test";
-
-        ResponseEntity res = this.restTemplate.exchange(URI, HttpMethod.DELETE, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriFileWithName(this.port), HttpMethod.DELETE, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
-    void badRequestFilePutMethodTest() {
+    void badRequestFilePutMethodTest() throws URISyntaxException {
 
         final FileEntity newFilename = new FileEntity("test", 100L);
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", "");
-        final HttpEntity<FileEntity> entity = new HttpEntity(newFilename, headers);
+        final HttpEntity<FileEntity> entity = new HttpEntity(newFilename, this.data.getEmptyHeaders());
 
-        final String URI = this.host + this.port + "/cloud/file" + "?filename=test";
-
-        ResponseEntity res = this.restTemplate.exchange(URI, HttpMethod.PUT, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriFileWithName(this.port), HttpMethod.PUT, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
-    void badRequestFilePostMethodTest() {
+    void badRequestFilePostMethodTest() throws URISyntaxException {
 
         final MultiValueMap<String, File> body = new LinkedMultiValueMap();
         body.add("test", new File("test"));
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", "");
-        final HttpEntity<MultiValueMap<String, File>> entity = new HttpEntity(body, headers);
+        final HttpEntity<MultiValueMap<String, File>> entity = new HttpEntity(body, this.data.getEmptyHeaders());
 
-        final String URI = this.host + this.port + "/cloud/file";
-
-        ResponseEntity res = this.restTemplate.exchange(URI, HttpMethod.POST, entity, String.class);
+        ResponseEntity res = this.restTemplate.exchange(this.data.uriFile(this.port), HttpMethod.POST, entity, String.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -147,12 +117,9 @@ public class HttpRequestExceptionTests {
     @Test
     void badRequestListTest() throws URISyntaxException {
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", "");
-        final HttpEntity entity = new HttpEntity(headers);
-        final URI uri = new URI(host + port + "/cloud/list" + "?limit=3");
+        final HttpEntity entity = new HttpEntity(this.data.getEmptyHeaders());
 
-        ResponseEntity result = this.restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+        ResponseEntity result = this.restTemplate.exchange(this.data.uriList(this.port), HttpMethod.GET, entity, String.class);
 
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     }
@@ -160,12 +127,9 @@ public class HttpRequestExceptionTests {
     @Test
     void unauthorizedListTest() throws URISyntaxException {
 
-        final MultiValueMap<String, String> headers = new HttpHeaders();
-        headers.add("auth-token", token);
-        final HttpEntity entity = new HttpEntity(headers);
-        final URI uri = new URI(host + port + "/cloud/list" + "?limit=3");
+        final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 
-        ResponseEntity result = this.restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+        ResponseEntity result = this.restTemplate.exchange(this.data.uriList(this.port), HttpMethod.GET, entity, String.class);
 
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }

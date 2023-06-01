@@ -101,7 +101,6 @@ public class StorageServiceImpl implements StorageService {
                 throw new FileNotFoundException();
             }
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
             // Send code: 500
             throw new ServerError("Service: FileNotFoundException in getFile method");
         } catch (IOException e) {

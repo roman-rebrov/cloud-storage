@@ -51,7 +51,6 @@ public class StorageRepositoryImpl implements StorageRepository {
 
         if (this.accountStorage.containsKey(account.getLogin())) {
             final Account acc = this.accountStorage.get(account.getLogin());
-
             if (acc.getLogin().equals(account.getLogin()) && acc.getPassword().equals(account.getPassword())) {
                 return true;
             }
