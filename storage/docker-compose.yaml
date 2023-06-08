@@ -1,0 +1,7 @@
+version: "1.0"
+
+services:
+  app1:
+    image: "transfer:1.0"
+    ports:
+      - "5500:5500"
