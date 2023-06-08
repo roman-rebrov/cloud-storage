@@ -11,11 +11,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 
 @CrossOrigin(
-        origins = "http://192.168.0.111, http://192.168.0.111:8080 , *",
+        origins = "http://192.168.0.111:8080",
         allowCredentials = "true"
 )
 @RestController
@@ -24,8 +23,6 @@ public class StorageController {
 
     @Autowired
     private StorageService service;
-    private final Logger log = Logger.getLogger(StorageController.class.getName());
-
 
     @PostMapping("/login")
     public ResponseEntity<Login> login(@RequestBody Account account) {
