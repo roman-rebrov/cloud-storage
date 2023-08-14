@@ -1,12 +1,12 @@
 package com.cloudstorage.storage.service;
 
-import com.cloudstorage.storage.entity.Account;
 import com.cloudstorage.storage.entity.FileEntity;
-import com.cloudstorage.storage.entity.Login;
+import com.cloudstorage.storage.entity.persistence.FilePersistence;
 import com.cloudstorage.storage.exception.AuthorizedException;
-import com.cloudstorage.storage.exception.BadCredentialException;
 import com.cloudstorage.storage.exception.InputDataException;
 import com.cloudstorage.storage.exception.ServerError;
+import com.cloudstorage.storage.repository.ClientRepository;
+import com.cloudstorage.storage.repository.FilesJpaRepository;
 import com.cloudstorage.storage.repository.StorageRepository;
 import com.cloudstorage.storage.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,42 +16,17 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class StorageServiceImpl implements StorageService {
 
     @Autowired
+    private ClientRepository clientRepo;
+    @Autowired
     private StorageRepository repository;
-
-    @Override
-    public Login login(Account account) {
-
-        // Account verification
-        final boolean verified = repository.verify(account);
-
-        // Check of verified account
-        if (!verified) {
-            // Send code: 400
-            throw new BadCredentialException("Incorrect login or password");
-        }
-        // Create token
-        final Login login = repository.login(account);
-
-        return login;
-    }
-
-    @Override
-    public void logout(String authToken) {
-
-        //  Validation
-        final boolean isValid = ValidationUtils.tokenValidation(authToken);
-        if (!isValid) {
-            // Send code: 400
-            throw new InputDataException("Error input data");
-        }
-
-        repository.logout(authToken);
-    }
+    @Autowired
+    private FilesJpaRepository filenameRepository;
 
     @Override
     public List<FileEntity> getFileList(String authToken, int limit) {
@@ -63,19 +38,22 @@ public class StorageServiceImpl implements StorageService {
             throw new InputDataException("Error input data");
         }
         //  Auth checking
-        final boolean isAuth = repository.auth(authToken);
+        final boolean isAuth = clientRepo.auth(authToken);
         if (!isAuth) {
             // Send code: 401
             throw new AuthorizedException("Unauthorized error");
         }
 
-        final List<FileEntity> fileList = repository.getFileList(limit);
+        final String directory = clientRepo.getDir(authToken);
+        final List<FilePersistence> fileList = filenameRepository.findByDirname(directory, limit);
+
         if (fileList == null) {
             // Send code: 500
             throw new ServerError("Service: Server Error in getFileList method");
         }
 
-        return fileList;
+        return fileList.stream().<FileEntity>map((FilePersistence file) ->
+                new FileEntity(file.getFilename(), file.getSize())).collect(Collectors.toList());
     }
 
     @Override
@@ -88,15 +66,17 @@ public class StorageServiceImpl implements StorageService {
             throw new InputDataException("Error input data");
         }
         //  Auth checking
-        final boolean isAuth = repository.auth(authToken);
+        final boolean isAuth = clientRepo.auth(authToken);
         if (!isAuth) {
             // Send code: 401
             throw new AuthorizedException("Unauthorized error");
         }
 
         byte[] fileByte = null;
+        final String directory = clientRepo.getDir(authToken);
+
         try {
-            fileByte = repository.getFile(filename);
+            fileByte = repository.getFile(directory, filename);
             if (fileByte == null) {
                 throw new FileNotFoundException();
             }
@@ -121,12 +101,21 @@ public class StorageServiceImpl implements StorageService {
             throw new InputDataException("Error input data");
         }
         //  Auth checking
-        final boolean isAuth = repository.auth(authToken);
+        final boolean isAuth = clientRepo.auth(authToken);
         if (!isAuth) {
             // Send code: 401
             throw new AuthorizedException("Unauthorized error");
         }
-        repository.saveFile(file);
+
+        final String dir = clientRepo.getDir(authToken);
+
+        // Save in file directory.
+        repository.saveFile(dir, file);
+
+        // Save in DB files.
+        final String name = file.getOriginalFilename();
+        final long size = file.getSize();
+        filenameRepository.save(dir, name, size);
 
         return "OK";
     }
@@ -141,13 +130,16 @@ public class StorageServiceImpl implements StorageService {
             throw new InputDataException("Error input data");
         }
         //  Auth checking
-        final boolean isAuth = repository.auth(authToken);
+        final boolean isAuth = clientRepo.auth(authToken);
         if (!isAuth) {
             // Send code: 401
             throw new AuthorizedException("Unauthorized error");
         }
 
-        final boolean result = repository.updateFile(oldFilename, newFilename);
+        final String dir = clientRepo.getDir(authToken);
+        final boolean result = repository.updateFile(dir, oldFilename, newFilename);
+        filenameRepository.updateFilename(dir, oldFilename, newFilename);
+
         if (!result) {
             // Send code: 500
             throw new ServerError("Service: Server Error in updateFile method");
@@ -165,12 +157,16 @@ public class StorageServiceImpl implements StorageService {
             throw new InputDataException("Error input data");
         }
         //  Auth checking
-        final boolean isAuth = repository.auth(authToken);
+        final boolean isAuth = clientRepo.auth(authToken);
         if (!isAuth) {
             // Send code: 401
             throw new AuthorizedException("Unauthorized error");
         }
-        final boolean result = repository.deleteFile(filename);
+
+        final String dir = clientRepo.getDir(authToken);
+        final boolean result = repository.deleteFile(dir, filename);
+        filenameRepository.deleteFilename(dir, filename);
+
         if (!result) {
             // Send code: 500
             throw new ServerError("Service: Server Error in deleteFile method");

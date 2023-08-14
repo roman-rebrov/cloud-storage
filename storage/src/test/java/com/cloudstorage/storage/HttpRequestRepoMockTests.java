@@ -2,6 +2,8 @@ package com.cloudstorage.storage;
 
 import com.cloudstorage.storage.entity.Account;
 import com.cloudstorage.storage.entity.FileEntity;
+import com.cloudstorage.storage.repository.ClientRepository;
+import com.cloudstorage.storage.repository.FilesJpaRepository;
 import com.cloudstorage.storage.repository.StorageRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,16 +40,20 @@ public class HttpRequestRepoMockTests {
 
     @MockBean
     private StorageRepository repository;
+    @MockBean
+    private ClientRepository clientRepository;
+    @MockBean
+    private FilesJpaRepository DBfileRepository;
 
     @BeforeEach
     void beforeEach() {
-        Mockito.when(this.repository.auth(this.data.getToken())).thenReturn(true);
+        Mockito.when(this.clientRepository.auth(this.data.getToken())).thenReturn(true);
     }
 
     @Test
     void getListTest() throws URISyntaxException {
 
-        Mockito.when(this.repository.getFileList(3)).thenReturn(List.of());
+        Mockito.when(this.DBfileRepository.findByDirname(null, 3)).thenReturn(List.of());
 
         final HttpEntity<Account> entity = new HttpEntity(this.data.getHeaders());
 
@@ -59,7 +65,7 @@ public class HttpRequestRepoMockTests {
     @Test
     void putFileTest() throws URISyntaxException {
 
-        Mockito.when(repository.updateFile("test", "test")).thenReturn(true);
+        Mockito.when(repository.updateFile("test", "", "test")).thenReturn(true);
 
         final FileEntity newFilename = new FileEntity("test", 100L);
         final HttpEntity<FileEntity> entity = new HttpEntity(newFilename, this.data.getHeaders());
@@ -73,7 +79,7 @@ public class HttpRequestRepoMockTests {
     void saveFileTestWithMock() throws URISyntaxException {
 
         final MultipartFile file = new MockMultipartFile("test", new byte[0]);
-        Mockito.when(this.repository.saveFile(file)).thenReturn(true);
+        Mockito.when(this.repository.saveFile("", file)).thenReturn(true);
 
         final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 
@@ -86,7 +92,7 @@ public class HttpRequestRepoMockTests {
     @Test
     void deleteFileTestWithMock() throws URISyntaxException {
 
-        Mockito.when(this.repository.deleteFile("test")).thenReturn(true);
+        Mockito.when(this.repository.deleteFile("", "test")).thenReturn(true);
 
         final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 
@@ -98,7 +104,7 @@ public class HttpRequestRepoMockTests {
     @Test
     void getFileTestWithMock() throws URISyntaxException, IOException {
 
-        Mockito.when(this.repository.getFile("test")).thenReturn(new byte[0]);
+        Mockito.when(this.repository.getFile("", "test")).thenReturn(new byte[0]);
 
         final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 

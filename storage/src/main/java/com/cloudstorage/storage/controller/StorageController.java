@@ -1,9 +1,7 @@
 package com.cloudstorage.storage.controller;
 
 
-import com.cloudstorage.storage.entity.Account;
 import com.cloudstorage.storage.entity.FileEntity;
-import com.cloudstorage.storage.entity.Login;
 import com.cloudstorage.storage.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -14,7 +12,7 @@ import java.util.List;
 
 
 @CrossOrigin(
-        origins = "http://192.168.0.111:8080",
+        origins = "${origins.clients}",
         allowCredentials = "true"
 )
 @RestController
@@ -23,17 +21,6 @@ public class StorageController {
 
     @Autowired
     private StorageService service;
-
-    @PostMapping("/login")
-    public ResponseEntity<Login> login(@RequestBody Account account) {
-        final Login login = service.login(account);
-        return ResponseEntity.ok(login);
-    }
-
-    @PostMapping("/logout")
-    public void logout(@RequestHeader("auth-token") String authToken) {
-        service.logout(authToken);
-    }
 
     @PostMapping("/file")
     public ResponseEntity<String> filePost(@RequestHeader("auth-token") String authToken,
@@ -74,7 +61,6 @@ public class StorageController {
     @GetMapping("/list")
     public ResponseEntity<List<FileEntity>> list(@RequestHeader("auth-token") String authToken,
                                                  @RequestParam("limit") int limit) {
-        System.out.println(authToken.substring(authToken.indexOf(" ") + 1));
         final List<FileEntity> fileList = service.getFileList(authToken, limit);
         return ResponseEntity.ok(fileList);
     }

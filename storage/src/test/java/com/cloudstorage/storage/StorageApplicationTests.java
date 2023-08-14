@@ -1,6 +1,6 @@
 package com.cloudstorage.storage;
 
-import com.cloudstorage.storage.controller.StorageController;
+import com.cloudstorage.storage.controller.ClientController;
 import com.cloudstorage.storage.entity.Account;
 import com.cloudstorage.storage.entity.Login;
 import com.cloudstorage.storage.util.ValidationUtils;
@@ -15,7 +15,7 @@ class StorageApplicationTests {
 
 
     @Autowired
-    private StorageController controller;
+    private ClientController controller;
 
     @Test
     void contextLoads() {

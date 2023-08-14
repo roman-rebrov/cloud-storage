@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS Users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    login VARCHAR(30) UNIQUE,
+    password VARCHAR(30),
+    directory VARCHAR(30) UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS Files (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_dir VARCHAR(30) NOT NULL,
+    filename VARCHAR(100),
+    size BIGINT
+);
