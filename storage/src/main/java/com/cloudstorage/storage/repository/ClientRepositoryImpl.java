@@ -37,7 +37,10 @@ public class ClientRepositoryImpl implements ClientRepository{
     @Override
     public String getDir(String t) {
         final String token = t.substring(t.indexOf(" ") + 1);
-        return tokenStorage.get(token);
+        if (tokenStorage.containsKey(token)) {
+            return tokenStorage.get(token);
+        }
+        return "";
     }
 
 }

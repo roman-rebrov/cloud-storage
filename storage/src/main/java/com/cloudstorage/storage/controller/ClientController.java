@@ -3,7 +3,6 @@ package com.cloudstorage.storage.controller;
 import com.cloudstorage.storage.entity.Account;
 import com.cloudstorage.storage.entity.Login;
 import com.cloudstorage.storage.service.ClientService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/cloud")
 public class ClientController {
 
-    @Autowired
     public ClientService service;
 
+    public ClientController(ClientService service) {
+        this.service = service;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<Login> login(@RequestBody Account account) {

@@ -23,7 +23,7 @@ class StorageApplicationTests {
 
     @Test
     void controllerTest() {
-        ResponseEntity<Login> response = this.controller.login(new Account("user", "123"));
+        ResponseEntity<Login> response = this.controller.login(new Account("user1", "1234"));
         System.out.println("response = " + response.getBody().getAuthToken());
         Assertions.assertTrue(ValidationUtils.tokenValidation(response.getBody().getAuthToken()));
         Assertions.assertNotNull(controller);

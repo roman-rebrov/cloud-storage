@@ -3,7 +3,6 @@ package com.cloudstorage.storage.controller;
 
 import com.cloudstorage.storage.entity.FileEntity;
 import com.cloudstorage.storage.service.StorageService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,8 +18,11 @@ import java.util.List;
 @RequestMapping("/cloud")
 public class StorageController {
 
-    @Autowired
     private StorageService service;
+
+    public StorageController(StorageService service) {
+        this.service = service;
+    }
 
     @PostMapping("/file")
     public ResponseEntity<String> filePost(@RequestHeader("auth-token") String authToken,

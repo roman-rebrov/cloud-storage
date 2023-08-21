@@ -8,16 +8,18 @@ import com.cloudstorage.storage.exception.InputDataException;
 import com.cloudstorage.storage.repository.ClientRepository;
 import com.cloudstorage.storage.repository.UserJpaRepository;
 import com.cloudstorage.storage.util.ValidationUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ClientServiceImpl implements ClientService{
+public class ClientServiceImpl implements ClientService {
 
-    @Autowired
     private ClientRepository repository;
-    @Autowired
     private UserJpaRepository userRepository;
+
+    public ClientServiceImpl(ClientRepository repository, UserJpaRepository userRepository) {
+        this.repository = repository;
+        this.userRepository = userRepository;
+    }
 
     @Override
     public Login login(Account account) {

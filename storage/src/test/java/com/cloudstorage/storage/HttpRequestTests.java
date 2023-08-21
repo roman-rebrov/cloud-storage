@@ -33,7 +33,7 @@ public class HttpRequestTests {
     @Test
     void loginTest() throws JsonProcessingException, URISyntaxException {
 
-        final HttpEntity<Account> entity = new HttpEntity(new Account("user", "123"));
+        final HttpEntity<Account> entity = new HttpEntity(new Account("user1", "1234"));
 
         ResponseEntity res = this.restTemplate.exchange(this.data.uriLogin(this.port), HttpMethod.POST, entity, String.class);
         Login login = this.objectMapper.readValue(res.getBody().toString(), Login.class);

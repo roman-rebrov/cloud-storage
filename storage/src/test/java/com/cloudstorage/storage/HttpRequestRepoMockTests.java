@@ -14,8 +14,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -65,7 +67,7 @@ public class HttpRequestRepoMockTests {
     @Test
     void putFileTest() throws URISyntaxException {
 
-        Mockito.when(repository.updateFile("test", "", "test")).thenReturn(true);
+        Mockito.when(repository.updateFile(null, "test", "test")).thenReturn(true);
 
         final FileEntity newFilename = new FileEntity("test", 100L);
         final HttpEntity<FileEntity> entity = new HttpEntity(newFilename, this.data.getHeaders());
@@ -76,12 +78,17 @@ public class HttpRequestRepoMockTests {
     }
 
     @Test
-    void saveFileTestWithMock() throws URISyntaxException {
+    void saveFileTestWithMock() throws URISyntaxException, IOException {
 
-        final MultipartFile file = new MockMultipartFile("test", new byte[0]);
-        Mockito.when(this.repository.saveFile("", file)).thenReturn(true);
+        final MultipartFile file = new MockMultipartFile("test", "test", "MULTIPART_FORM_DATA", new byte[3]);
+        Mockito.when(this.repository.saveFile(null, file)).thenReturn(true);
 
-        final HttpEntity entity = new HttpEntity(this.data.getHeaders());
+        final LinkedMultiValueMap<String, Resource> parts = new LinkedMultiValueMap<>();
+        final HttpHeaders httpHeaders = new HttpHeaders(this.data.getHeaders());
+        httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+        parts.add("file", file.getResource());
+        final HttpEntity<LinkedMultiValueMap<String, MultipartFile>> entity = new HttpEntity(parts, httpHeaders);
+
 
         ResponseEntity res = this.restTemplate.exchange(this.data.uriFile(this.port), HttpMethod.POST, entity, String.class);
 
@@ -92,7 +99,7 @@ public class HttpRequestRepoMockTests {
     @Test
     void deleteFileTestWithMock() throws URISyntaxException {
 
-        Mockito.when(this.repository.deleteFile("", "test")).thenReturn(true);
+        Mockito.when(this.repository.deleteFile(null, "test")).thenReturn(true);
 
         final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 
@@ -104,7 +111,7 @@ public class HttpRequestRepoMockTests {
     @Test
     void getFileTestWithMock() throws URISyntaxException, IOException {
 
-        Mockito.when(this.repository.getFile("", "test")).thenReturn(new byte[0]);
+        Mockito.when(this.repository.getFile(null, "test")).thenReturn(new byte[3]);
 
         final HttpEntity entity = new HttpEntity(this.data.getHeaders());
 

@@ -9,7 +9,6 @@ import com.cloudstorage.storage.repository.ClientRepository;
 import com.cloudstorage.storage.repository.FilesJpaRepository;
 import com.cloudstorage.storage.repository.StorageRepository;
 import com.cloudstorage.storage.util.ValidationUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,15 +20,18 @@ import java.util.stream.Collectors;
 @Service
 public class StorageServiceImpl implements StorageService {
 
-    @Autowired
     private ClientRepository clientRepo;
-    @Autowired
-    private StorageRepository repository;
-    @Autowired
+    private StorageRepository storageRepository;
     private FilesJpaRepository filenameRepository;
 
-    @Override
-    public List<FileEntity> getFileList(String authToken, int limit) {
+    public StorageServiceImpl(ClientRepository clientRepo, StorageRepository storageRepository, FilesJpaRepository filenameRepository) {
+        this.clientRepo = clientRepo;
+        this.storageRepository = storageRepository;
+        this.filenameRepository = filenameRepository;
+    }
+
+
+    private void inputDataChecking(String authToken) {
 
         //  Validation
         final boolean isValid = ValidationUtils.tokenValidation(authToken);
@@ -43,6 +45,12 @@ public class StorageServiceImpl implements StorageService {
             // Send code: 401
             throw new AuthorizedException("Unauthorized error");
         }
+    }
+
+    @Override
+    public List<FileEntity> getFileList(String authToken, int limit) {
+
+        this.inputDataChecking(authToken);
 
         final String directory = clientRepo.getDir(authToken);
         final List<FilePersistence> fileList = filenameRepository.findByDirname(directory, limit);
@@ -59,24 +67,14 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public byte[] getFile(String authToken, String filename) {
 
-        //  Validation
-        final boolean isValid = ValidationUtils.tokenValidation(authToken);
-        if (!isValid) {
-            // Send code: 400
-            throw new InputDataException("Error input data");
-        }
-        //  Auth checking
-        final boolean isAuth = clientRepo.auth(authToken);
-        if (!isAuth) {
-            // Send code: 401
-            throw new AuthorizedException("Unauthorized error");
-        }
+
+        this.inputDataChecking(authToken);
 
         byte[] fileByte = null;
         final String directory = clientRepo.getDir(authToken);
 
         try {
-            fileByte = repository.getFile(directory, filename);
+            fileByte = storageRepository.getFile(directory, filename);
             if (fileByte == null) {
                 throw new FileNotFoundException();
             }
@@ -94,23 +92,12 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public String saveFile(String authToken, MultipartFile file) {
 
-        //  Validation
-        final boolean isValid = ValidationUtils.tokenValidation(authToken);
-        if (!isValid) {
-            // Send code: 400
-            throw new InputDataException("Error input data");
-        }
-        //  Auth checking
-        final boolean isAuth = clientRepo.auth(authToken);
-        if (!isAuth) {
-            // Send code: 401
-            throw new AuthorizedException("Unauthorized error");
-        }
 
+        this.inputDataChecking(authToken);
         final String dir = clientRepo.getDir(authToken);
 
         // Save in file directory.
-        repository.saveFile(dir, file);
+        storageRepository.saveFile(dir, file);
 
         // Save in DB files.
         final String name = file.getOriginalFilename();
@@ -123,21 +110,11 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public boolean updateFile(String authToken, String oldFilename, String newFilename) {
 
-        //  Validation
-        final boolean isValid = ValidationUtils.tokenValidation(authToken);
-        if (!isValid) {
-            // Send code: 400
-            throw new InputDataException("Error input data");
-        }
-        //  Auth checking
-        final boolean isAuth = clientRepo.auth(authToken);
-        if (!isAuth) {
-            // Send code: 401
-            throw new AuthorizedException("Unauthorized error");
-        }
+
+        this.inputDataChecking(authToken);
 
         final String dir = clientRepo.getDir(authToken);
-        final boolean result = repository.updateFile(dir, oldFilename, newFilename);
+        final boolean result = storageRepository.updateFile(dir, oldFilename, newFilename);
         filenameRepository.updateFilename(dir, oldFilename, newFilename);
 
         if (!result) {
@@ -150,21 +127,10 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public boolean deleteFile(String authToken, String filename) {
 
-        //  Validation
-        final boolean isValid = ValidationUtils.tokenValidation(authToken);
-        if (!isValid) {
-            // Send code: 400
-            throw new InputDataException("Error input data");
-        }
-        //  Auth checking
-        final boolean isAuth = clientRepo.auth(authToken);
-        if (!isAuth) {
-            // Send code: 401
-            throw new AuthorizedException("Unauthorized error");
-        }
+        this.inputDataChecking(authToken);
 
         final String dir = clientRepo.getDir(authToken);
-        final boolean result = repository.deleteFile(dir, filename);
+        final boolean result = storageRepository.deleteFile(dir, filename);
         filenameRepository.deleteFilename(dir, filename);
 
         if (!result) {
